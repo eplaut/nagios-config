@@ -1,6 +1,6 @@
 #!/bin/bash -e
 
-if [ "$#" -ne 1 ]; then
+if [ "$#" -ne 3 ]; then
     echo "usage: $0 HOST_NAME SERVICE_NAME COMMAND" >&2
     exit 1
 fi
