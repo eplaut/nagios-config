@@ -1,0 +1,56 @@
+#!/usr/bin/python
+import sys
+import ssl
+
+try:
+    ssl._create_default_https_context = ssl._create_unverified_context  # disable ssl check
+except:
+    pass
+
+import baker
+from pysphere import VIServer, VIProperty
+
+address = 'vsphere_address'
+username = 'username'
+password = 'password'
+
+return_code = {'ok': 0,
+               'warning': 1,
+               'critical': 2,
+               'unknown': 3,}
+
+
+@baker.command
+def check_datastore(datastore_name, w, c):
+    prop = None
+    server = VIServer()
+    server.connect(address, username, password)
+    for ds, ds_name in server.get_datastores().iteritems():
+        if datastore_name == ds_name:
+            prop = VIProperty(server, ds)
+            break
+    if not prop:
+        return _print_status('UNKNOWN', 'cannot find datadtore {}'.format(sys.argv))
+    freespace = 100.0 * prop.summary.freeSpace / prop.summary.capacity
+    status = _get_status(freespace, w, c)
+    return _print_status(status, '{} free space {:.2g}%'.format(datastore_name, freespace))
+
+
+def _get_status(current, w, c):
+    if current > int(w):
+        status = 'OK'
+    elif current > int(c):
+        status = 'WARNING'
+    else:
+        status = 'CRITICAL'
+    return status
+
+
+def _print_status(level, message):
+    print('{} - {}'.format(level.upper(), message))
+    return return_code[level.lower()]
+
+
+if __name__ == '__main__':
+    exit(baker.run())
+

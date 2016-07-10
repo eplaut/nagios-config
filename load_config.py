@@ -67,5 +67,14 @@ def add_service_to_host(host_name, service_name, command):
         fh.write(text)
 
 
+@baker.command
+def add_command(command_name):
+    with open('templates/{}.cfg'.format(command_name), 'r') as fh:
+        text = fh.read()
+
+    with open(os.path.join(CONF_DIR, 'command.cfg'), 'a') as fh:
+        fh.write(text)
+
+
 if __name__ == '__main__':
     baker.run()
