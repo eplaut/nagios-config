@@ -1,0 +1,51 @@
+#!/usr/bin/env python
+import baker
+import requests
+
+USERNAME = 'username'
+PASSHASH = 'passhash'
+VERIFY_SSL = False
+url = 'https://fqdn/api/getsensordetails.json?id={sensor_id}&username={username}&passhash={passhash}'.format
+
+
+return_code = {'ok': 0,
+               'warning': 1,
+               'critical': 2,
+               'unknown': 3,}
+
+sensors = {'sensor_name1': 'sensor_id1',
+           'sensor_name2': 'sensor_id2',
+           'sensor_name3': 'sensor_id3'}
+
+@baker.command
+def check_sensor(sensor, w, c, username=USERNAME, passhash=PASSHASH):
+    try:
+        r = requests.get(url(sensor_id=sensors[sensor], username=username, passhash=passhash), verify=VERIFY_SSL)
+        data = r.json()
+        raw_traffic = data['sensordata']['lastvalue']
+        traffic = raw_traffic.split()[0]
+        traffic = int(traffic.replace(',', ''))
+        status = _get_status(traffic, w, c)
+        return _print_status(status, '{} traffic {}'.format(sensor, raw_traffic))
+    except Exception as e:
+        return _print_status('UNKNOWN', 'Failed to query sensor {}. {}'.format(sensor, e.message))
+
+
+def _get_status(current, w, c):
+    if current < int(w):
+        status = 'OK'
+    elif current < int(c):
+        status = 'WARNING'
+    else:
+        status = 'CRITICAL'
+    return status
+
+
+def _print_status(level, message):
+    print('{} - {}'.format(level.upper(), message))
+    return return_code[level.lower()]
+
+
+if __name__ == '__main__':
+    exit(baker.run())
+
