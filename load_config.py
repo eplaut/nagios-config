@@ -32,7 +32,7 @@ def _host_cfg_file(host_name):
     return '{}/{}.cfg'.format(CONF_DIR, host_name)
 
 
-@baker.command
+@baker.command(default=True)
 def load_config(config_file):
     parser = ConfigParser()
     parser.read(config_file)
